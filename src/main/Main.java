@@ -1,9 +1,11 @@
 package main;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Properties;
 
 import server.Server;
@@ -42,13 +44,33 @@ public class Main {
 	}
 	try {
 	    printInfo("Attempting to start the server...");
-	    server = new Server();
+	    server = new Server(
+		    Integer.parseInt(properties.getProperty("port")));
 	} catch (Exception e) {
 	    printAlert("Error starting server!");
 	    printAlert("Ending execution...");
 	    e.printStackTrace();
 	    System.exit(1);
 	}
+	boolean go = true;
+	BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+	String read;
+	printInfo("Now listening for console input...");
+	while (go) {
+	    try {
+		read = in.readLine().trim().toLowerCase();
+		if (read.equals("stop") || read.equals("quit"))
+		    go = false;
+		else
+		    printAlert("Command not recognized.");
+	    } catch (IOException e) {
+		printAlert("Error reading System input!");
+		e.printStackTrace();
+	    }
+	}
+	printInfo("Shutting down server...");
+	server.dispose();
+	printInfo("Ending execution...");
     }
 
     /**
@@ -72,7 +94,7 @@ public class Main {
     }
 
     /**
-     * Attempts to load application properties from the file main.properties.
+     * Attempts to load application properties from the file 'main.properties'.
      */
     private static void loadProperties() throws IOException {
 	FileInputStream file = new FileInputStream("./main.properties");
@@ -81,13 +103,37 @@ public class Main {
     }
 
     /**
-     * 
+     * Writes a new default 'main.properties' file.
      */
     private static void writeDefaultProperties() throws IOException {
 	properties.setProperty("port", "5000");
 	FileOutputStream file = new FileOutputStream("./main.properties");
 	properties.store(file, null);
 	file.close();
+    }
+
+    /**
+     * Allows other objects to print info updates to the system output.
+     * 
+     * @param id
+     *            An identifier for the object in question.
+     * @param s
+     *            The String to be printed.
+     */
+    public static void printInfo(String id, String s) {
+	printInfo("<" + id + "> " + s);
+    }
+
+    /**
+     * Allows other objects to print alert updates to the system output.
+     * 
+     * @param id
+     *            An identifier for the object in question.
+     * @param s
+     *            The String to be printed.
+     */
+    public static void printAlert(String id, String s) {
+	printAlert("<" + id + "> " + s);
     }
 
 }
