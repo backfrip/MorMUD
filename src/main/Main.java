@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Properties;
 
+import language.Parser;
 import server.Server;
 
 public class Main {
@@ -58,11 +59,11 @@ public class Main {
 	printInfo("Now listening for console input...");
 	while (go) {
 	    try {
-		read = in.readLine().trim().toLowerCase();
+		read = in.readLine().trim();
 		if (read.equals("stop") || read.equals("quit"))
 		    go = false;
 		else
-		    printAlert("Command not recognized.");
+		    Parser.parseConsole(read);
 	    } catch (IOException e) {
 		printAlert("Error reading System input!");
 		e.printStackTrace();
