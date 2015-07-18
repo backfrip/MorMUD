@@ -14,7 +14,6 @@ import server.Server;
 public class Main {
     private static Server server;
     private static Properties properties;
-    private static boolean go;
 
     /**
      * Handler method for MorMUD.
@@ -54,7 +53,7 @@ public class Main {
 	    e.printStackTrace();
 	    System.exit(1);
 	}
-	go = true;
+	boolean go = true;
 	BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 	String read;
 	printInfo("Now listening for console input...");
