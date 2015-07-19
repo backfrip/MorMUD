@@ -3,21 +3,23 @@ package language;
 import main.Main;
 
 public abstract class Parser {
+    private static final String id = "PARSE";
+
     public static void parseConsole(String s) {
-	s.trim();
-	String[] c = s.split(" ");
-	boolean go = true;
-	int i = 0;
-	while (go) {
-	    if (c[i].equals("")) {
-		i++;
-	    } else if (c[i].toLowerCase().equals("quit") || c[i].toLowerCase().equals("stop")) {
-		Main.shutdown();
-		go = false;
-	    } else {
-		Main.printAlert("CONSOLE", "Command not recognized!");
-		go = false;
-	    }
-	}
+	s = s.trim();
+	int i = findBreak(s);
+	String[] a = { s.substring(0, i), s.substring(i) };
+
+	if (a[0].equals("quit") || a[0].equals("stop"))
+	    CommandConsole.stop();
+	else
+	    Main.printAlert(id, "Command not recognized!");
+    }
+
+    private static int findBreak(String s) {
+	int i;
+	for (i = 0; i < s.length() && s.charAt(i) != ' '; i++)
+	    ;
+	return i;
     }
 }

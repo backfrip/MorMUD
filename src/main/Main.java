@@ -54,11 +54,10 @@ public class Main {
 	    e.printStackTrace();
 	    System.exit(1);
 	}
-	go = true;
 	BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 	String read;
 	printInfo("Now listening for console input...");
-	while (go) {
+	for (go = true; go;) {
 	    try {
 		read = in.readLine().trim();
 		Parser.parseConsole(read);

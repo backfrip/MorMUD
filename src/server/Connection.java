@@ -16,47 +16,62 @@ public class Connection extends Thread {
     private int num;
     private String id;
 
-    public Connection(Socket client, int i) throws Exception {
+    public Connection(Socket client, int i) {
 	socket = client;
 	num = i;
 	id = "CON" + i;
 
 	Main.printInfo(id, "New connection from ("
-		+ client.getRemoteSocketAddress().toString().substring(1) + ")");
+		+ socket.getRemoteSocketAddress().toString().substring(1) + ")");
 
-	in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-	out = new DataOutputStream(socket.getOutputStream());
-	go = true;
+	try {
+	    in = new BufferedReader(new InputStreamReader(
+		    socket.getInputStream()));
+	    out = new DataOutputStream(socket.getOutputStream());
+	} catch (IOException e) {
+	    Main.printAlert(id, "Error getting client input/output streams!");
+	    e.printStackTrace();
+	}
 
 	start();
     }
 
     @Override
     public void run() {
-	while (go) {
+	for (go = true; go;) {
 	    try {
 		String read = in.readLine();
 		if (read != null)
-		    System.out.println("[MESSAGE] " + read);
+		    Main.printInfo(id, "New input.");
 		else
 		    go = false;
 	    } catch (IOException e) {
+		Main.printAlert(id,
+			"Client socket connection error. (This may be intentional.)");
 		go = false;
-		e.printStackTrace();
 	    }
 	}
-	System.out.println("[INFO] Remote host ended connection.");
 	try {
 	    socket.close();
 	} catch (IOException e) {
+	    Main.printAlert(id, "Error closing client socket!");
 	    e.printStackTrace();
 	}
 	status = false;
+	Main.printInfo(id, "Connection closed successfully.");
     }
 
-    public void dispose() {
+    public boolean dispose() {
 	go = false;
 	interrupt();
+	try {
+	    socket.close();
+	} catch (IOException e) {
+	    Main.printInfo(id, "Client socket forcibly closed.");
+	}
+	while (isAlive())
+	    interrupted();
+	return true;
     }
 
     public boolean isActive() {

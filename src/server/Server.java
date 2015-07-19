@@ -14,20 +14,25 @@ public class Server extends Thread {
     private ArrayList<Connection> connections;
     private int counter;
 
-    public Server(int port) throws Exception {
+    public Server(int port) {
 	Main.printInfo(id, "Starting a new server on port " + port + "...");
-	socket = new ServerSocket(port);
-	Main.printInfo(id, "Server started successfully!");
-	connections = new ArrayList<Connection>();
-	counter = 0;
-
-	start();
+	try {
+	    socket = new ServerSocket(port);
+	} catch (IOException e) {
+	    Main.printAlert(id, "Error starting server!");
+	    e.printStackTrace();
+	}
+	if (socket.isBound()) {
+	    Main.printInfo(id, "Server started successfully!");
+	    connections = new ArrayList<Connection>();
+	    counter = 0;
+	    start();
+	}
     }
 
     @Override
     public void run() {
-	go = true;
-	while (go) {
+	for (go = true; go;) {
 	    Main.printInfo(id, "Listening for new connections...");
 	    Connection con;
 	    try {
@@ -51,12 +56,8 @@ public class Server extends Thread {
 	interrupt();
 	try {
 	    socket.close();
-	    join();
 	} catch (IOException e) {
 	    Main.printInfo(id, "Server socket forcibly closed.");
-	} catch (InterruptedException e) {
-	    Main.printAlert(id, "Server thread shutdown interrupted");
-	    e.printStackTrace();
 	}
 	while (isAlive())
 	    interrupted();
