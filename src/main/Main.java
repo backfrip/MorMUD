@@ -108,6 +108,7 @@ public class Main {
 	FileOutputStream file = new FileOutputStream("./main.properties");
 	properties.store(file, null);
 	file.close();
+	printInfo("Default properties file created successfully!");
     }
 
     /**

@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
+import object.Room;
+import language.Parser;
 import main.Main;
 
 public class Connection extends Thread {
@@ -14,7 +16,7 @@ public class Connection extends Thread {
     private DataOutputStream out;
     private boolean go, status = true;
     private int num;
-    private String id;
+    private String id, read;
 
     public Connection(Socket client, int i) {
 	socket = client;
@@ -38,11 +40,17 @@ public class Connection extends Thread {
 
     @Override
     public void run() {
+	try {
+	    out.writeChars(Parser.welcome() + "\n");
+	} catch (IOException e1) {
+	    Main.printAlert(id,
+		    "Client socket connection error! (This one is definitely not intentional.)");
+	}
 	for (go = true; go;) {
 	    try {
-		String read = in.readLine();
+		read = in.readLine();
 		if (read != null)
-		    Main.printInfo(id, "New input.");
+		    out.writeChars(Parser.parse(read, new Room()) + "\n");
 		else
 		    go = false;
 	    } catch (IOException e) {
@@ -76,5 +84,9 @@ public class Connection extends Thread {
 
     public boolean isActive() {
 	return status;
+    }
+
+    public int getNum() {
+	return num;
     }
 }
