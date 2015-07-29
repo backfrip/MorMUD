@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.CharBuffer;
 
+import object.GameObject;
 import object.Room;
+import server.User;
 import main.Main;
 
 public abstract class Parser {
@@ -28,7 +30,7 @@ public abstract class Parser {
 	    Main.printAlert(id, "Command not recognized!");
     }
 
-    public static String parse(String s, Room r) {
+    public static String parse(String s, User u) {
 	s = s.trim();
 	int i;
 	for (i = 0; i < s.length() && s.charAt(i) != ' '; i++)
@@ -39,43 +41,48 @@ public abstract class Parser {
 	    s = Command.who();
 	} else if (c[0].toLowerCase().equals("l")
 		|| c[0].toLowerCase().equals("look")) {
-	    if (c[1].equals("")) {
-		s = Command.lookAt(r);
-	    } else {
-		c = grabWord(c);
-		if (c[1].equals("at")) {
-		    if (c[2].equals("")) {
-			s = "Look at what?";
-		    } else if (c[2].toLowerCase().equals("here")) {
-			s = Command.lookAt(r);
-		    } else {
-			s = Command.lookAt(c[2], r);
-		    }
-		} else if (c[1].equals("in")) {
-		    if (c[2].equals("")) {
-			s = "Look in what?";
-		    } else if (c[2].toLowerCase().equals("here")) {
-			s = Command.lookIn(r);
-		    } else {
-			s = Command.lookIn(c[2], r);
-		    }
-		} else if (c[1].equals("on")) {
-		    if (c[2].equals("")) {
-			s = "Look on what?";
-		    } else {
-			s = Command.lookOn(c[2], r);
-		    }
-		} else {
-		    s = Command.lookAt(c[1] + " " + c[2], r);
-		}
-	    }
+	    s = parseLook(c, u);
 	} else if (c[0].toLowerCase().equals("a")
 		|| c[0].toLowerCase().equals("attack")) {
-	    s = Command.attack(c[1], r);
+	    s = Command.attack(c[1], u);
 	} else {
-	    s = Command.exit(c[1], r);
+	    s = Command.exit(c[1], u);
 	}
 	return s;
+    }
+
+    private static String[] grabWord(String[] c) {
+	int i;
+	for (i = 0; i < c[c.length - 1].length()
+		&& c[c.length - 1].charAt(i) != ' '; i++)
+	    ;
+	String[] r = new String[c.length + 1];
+	for (int j = 0; j < c.length - 1; j++)
+	    r[j] = c[j];
+	r[c.length - 1] = c[c.length - 1].substring(0, i);
+	r[c.length] = c[c.length - 1].substring(i).trim();
+	return r;
+    }
+
+    private static GameObject getByKeys(User u, String s) {
+	return u.getRoom();
+    }
+
+    public static String parseLook(String[] c, User u) {
+	if (c[1].equals("")) {
+	    return Command.lookAt(u, u.getRoom());
+	} else if (c[1].substring(0, 3).toLowerCase().equals("at ")) {
+	    grabWord(c);
+	    if (getByKeys(u, c[2]) != null)
+		return Command.lookAt(u, getByKeys(u, c[2]));
+	    return "There doesn't appear to be any \"" + c[2] + "\" here...";
+	} else if (c[1].substring(0, 3).toLowerCase().equals("in ")
+		|| c[1].substring(0, 7).toLowerCase().equals("inside ")
+		|| c[1].substring(0, 5).toLowerCase().equals("into ")) {
+	    grabWord(c);
+	    if (getByKeys(u, c[2]) != null)
+		return Command.lookIn(u, getByKeys(u, c[2]));
+	}
     }
 
     public static String welcome() {
@@ -100,19 +107,6 @@ public abstract class Parser {
 	    s = welcome();
 	}
 	return s;
-    }
-
-    private static String[] grabWord(String[] c) {
-	int i;
-	for (i = 0; i < c[c.length - 1].length()
-		&& c[c.length - 1].charAt(i) != ' '; i++)
-	    ;
-	String[] r = new String[c.length + 1];
-	for (int j = 0; j < c.length - 1; j++)
-	    r[j] = c[j];
-	r[c.length - 1] = c[c.length - 1].substring(0, i);
-	r[c.length] = c[c.length - 1].substring(i).trim();
-	return r;
     }
 
     private static void writeDefaultWelcome() {

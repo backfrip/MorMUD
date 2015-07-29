@@ -1,51 +1,47 @@
 package server;
 
 import java.io.IOException;
-import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 import main.Main;
 
 public class Server extends Thread {
-    private ServerSocket socket;
+    private Listener listener;
     private final String id = "SERVER";
     private boolean go;
     private ArrayList<Connection> connections;
     private int counter;
 
     public Server(int port) {
-	Main.printInfo(id, "Starting a new server on port " + port + "...");
+	Main.printInfo(id, "Attempting to start a new server on port " + port
+		+ "...");
 	try {
-	    socket = new ServerSocket(port);
+	    listener = new Listener(this, port);
 	} catch (IOException e) {
 	    Main.printAlert(id, "Error starting server!");
 	    e.printStackTrace();
 	}
-	if (socket.isBound()) {
+	if (listener.isBound()) {
 	    Main.printInfo(id, "Server started successfully!");
 	    connections = new ArrayList<Connection>();
 	    counter = 0;
 	    start();
+	} else {
+	    Main.printAlert(id,
+		    "Unknown error verifying server startup, shutting down...");
+	    listener.dispose();
+	    clearConnections();
 	}
     }
 
     @Override
     public void run() {
 	for (go = true; go;) {
-	    Main.printInfo(id, "Listening for new connections...");
-	    Connection con;
-	    try {
-		con = new Connection(socket.accept(), counter);
-		connections.add(con);
-		counter++;
-	    } catch (IOException e) {
-		Main.printAlert(id,
-			"Server socket connection error. (This may be intentional.)");
-	    } catch (Exception e) {
-		e.printStackTrace();
-	    }
 	}
+	Main.printInfo(id, "Stopping listener...");
+	listener.dispose();
 	Main.printInfo(id, "Clearing active connections...");
 	clearConnections();
 	Main.printInfo(id, "Server shut down successfully!");
@@ -54,14 +50,17 @@ public class Server extends Thread {
     public boolean dispose() {
 	go = false;
 	interrupt();
-	try {
-	    socket.close();
-	} catch (IOException e) {
-	    Main.printInfo(id, "Server socket forcibly closed.");
-	}
 	while (isAlive())
 	    interrupted();
 	return true;
+    }
+
+    public void newConnection(Socket client) {
+	Main.printInfo(id, "New connection from ("
+		+ client.getRemoteSocketAddress().toString().substring(1) + ")");
+	Connection con = new Connection(client, counter);
+	connections.add(con);
+	counter++;
     }
 
     public void clearConnections() {

@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
-import object.Room;
 import language.Parser;
 import main.Main;
 
@@ -17,14 +16,12 @@ public class Connection extends Thread {
     private boolean go, status = true;
     private int num;
     private String id, read;
+    private User user;
 
     public Connection(Socket client, int i) {
 	socket = client;
 	num = i;
 	id = "CON" + i;
-
-	Main.printInfo(id, "New connection from ("
-		+ socket.getRemoteSocketAddress().toString().substring(1) + ")");
 
 	try {
 	    in = new BufferedReader(new InputStreamReader(
@@ -42,6 +39,7 @@ public class Connection extends Thread {
     public void run() {
 	try {
 	    out.writeChars(Parser.welcome() + "\n");
+	    initializeUser();
 	} catch (IOException e1) {
 	    Main.printAlert(id,
 		    "Client socket connection error! (This one is definitely not intentional.)");
@@ -50,7 +48,7 @@ public class Connection extends Thread {
 	    try {
 		read = in.readLine();
 		if (read != null)
-		    out.writeChars(Parser.parse(read, new Room()) + "\n");
+		    out.writeChars(Parser.parse(read, null) + "\n");
 		else
 		    go = false;
 	    } catch (IOException e) {
@@ -65,8 +63,8 @@ public class Connection extends Thread {
 	    Main.printAlert(id, "Error closing client socket!");
 	    e.printStackTrace();
 	}
-	status = false;
 	Main.printInfo(id, "Connection closed successfully.");
+	status = false;
     }
 
     public boolean dispose() {
@@ -88,5 +86,14 @@ public class Connection extends Thread {
 
     public int getNum() {
 	return num;
+    }
+
+    private void initializeUser() throws IOException {
+	while (true) {
+	    out.writeChars("Username: ");
+	    String u = in.readLine();
+	    out.writeChars("\nPassword: ");
+	    user = new
+	}
     }
 }
