@@ -15,6 +15,7 @@ public class Main {
     private static Server server;
     private static Properties properties;
     private static boolean go;
+    public static Storage storage;
 
     /**
      * Handler method for MorMUD.
@@ -23,6 +24,13 @@ public class Main {
      *            Arguments given by command line.
      */
     public static void main(String[] args) {
+	go = true;
+	DefaultWriter.check();
+	if (!go)
+	    System.exit(1);
+	storage = new Storage();
+	if (!go)
+	    System.exit(1);
 	properties = new Properties();
 	try {
 	    printInfo("Attempting to load properties from 'main.properties'...");
@@ -43,11 +51,11 @@ public class Main {
 	    printAlert("Ending execution...");
 	    e.printStackTrace();
 	    System.exit(1);
-	}
+	} // Replacing all of the above later when I get around to coding
+	  // DefaultWriter
 	try {
 	    printInfo("Attempting to start the server...");
-	    server = new Server(
-		    Integer.parseInt(properties.getProperty("port")));
+	    server = new Server(Integer.parseInt(properties.getProperty("port")));
 	} catch (Exception e) {
 	    printAlert("Error starting server!");
 	    printAlert("Ending execution...");
@@ -57,7 +65,7 @@ public class Main {
 	BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 	String read;
 	printInfo("Now listening for console input...");
-	for (go = true; go;) {
+	while (go) {
 	    try {
 		read = in.readLine().trim();
 		Parser.parseConsole(read);

@@ -1,12 +1,24 @@
 package server;
 
-import object.Room;
+import main.Main;
+import object.GameObject;
 
 public class User {
-    private Room room;
+    private String username;
+    private GameObject room, character;
 
-    public Room getRoom() {
+    public User(String u) {
+	username = u;
+	room = Main.storage.getObject(0);
+	character = null;
+    }
+
+    public GameObject getRoom() {
 	return room;
+    }
+
+    public GameObject getCharacter() {
+	return character;
     }
 
 }

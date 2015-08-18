@@ -2,7 +2,6 @@
 *.class
 main.properties
 welcome.txt
-/users/
 *~
 \#*#
 docs/

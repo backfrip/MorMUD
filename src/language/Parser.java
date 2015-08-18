@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.nio.CharBuffer;
 
 import object.GameObject;
-import object.Room;
 import server.User;
 import main.Main;
 
@@ -23,8 +22,7 @@ public abstract class Parser {
 	    ;
 	String[] c = { s.substring(0, i), s.substring(i) };
 
-	if (c[0].toLowerCase().equals("quit")
-		|| c[0].toLowerCase().equals("stop"))
+	if (c[0].toLowerCase().equals("quit") || c[0].toLowerCase().equals("stop"))
 	    CommandConsole.stop();
 	else
 	    Main.printAlert(id, "Command not recognized!");
@@ -39,22 +37,19 @@ public abstract class Parser {
 
 	if (c[0].equals("who")) {
 	    s = Command.who();
-	} else if (c[0].toLowerCase().equals("l")
-		|| c[0].toLowerCase().equals("look")) {
+	} else if (c[0].toLowerCase().equals("l") || c[0].toLowerCase().equals("look")) {
 	    s = parseLook(c, u);
-	} else if (c[0].toLowerCase().equals("a")
-		|| c[0].toLowerCase().equals("attack")) {
-	    s = Command.attack(c[1], u);
+	} else if (c[0].toLowerCase().equals("a") || c[0].toLowerCase().equals("attack")) {
+	    // attack!
 	} else {
-	    s = Command.exit(c[1], u);
+	    // last ditch?
 	}
 	return s;
     }
 
     private static String[] grabWord(String[] c) {
 	int i;
-	for (i = 0; i < c[c.length - 1].length()
-		&& c[c.length - 1].charAt(i) != ' '; i++)
+	for (i = 0; i < c[c.length - 1].length() && c[c.length - 1].charAt(i) != ' '; i++)
 	    ;
 	String[] r = new String[c.length + 1];
 	for (int j = 0; j < c.length - 1; j++)
@@ -65,44 +60,53 @@ public abstract class Parser {
     }
 
     private static GameObject getByKeys(User u, String s) {
-	return u.getRoom();
+	if (s.toLowerCase().equals("me"))
+	    return u.getCharacter();
+	if (s.toLowerCase().equals("here"))
+	    return u.getRoom();
+	return null;
     }
 
     public static String parseLook(String[] c, User u) {
 	if (c[1].equals("")) {
 	    return Command.lookAt(u, u.getRoom());
-	} else if (c[1].substring(0, 3).toLowerCase().equals("at ")) {
-	    grabWord(c);
-	    if (getByKeys(u, c[2]) != null)
-		return Command.lookAt(u, getByKeys(u, c[2]));
-	    return "There doesn't appear to be any \"" + c[2] + "\" here...";
-	} else if (c[1].substring(0, 3).toLowerCase().equals("in ")
-		|| c[1].substring(0, 7).toLowerCase().equals("inside ")
-		|| c[1].substring(0, 5).toLowerCase().equals("into ")) {
-	    grabWord(c);
-	    if (getByKeys(u, c[2]) != null)
-		return Command.lookIn(u, getByKeys(u, c[2]));
+	} else {
+	    c = grabWord(c);
+	    if (c[1].toLowerCase().equals("at")) {
+		if (c[2].equals(""))
+		    return "Look at what?";
+		if (getByKeys(u, c[2]) != null)
+		    return Command.lookAt(u, getByKeys(u, c[2]));
+	    } else if (c[1].toLowerCase().equals("in") || c[1].toLowerCase().equals("inside")
+		    || c[1].toLowerCase().equals("into")) {
+		if (c[2].toLowerCase().equals(""))
+		    return "Look in what?";
+		if (getByKeys(u, c[2]) != null)
+		    return Command.lookIn(u, getByKeys(u, c[2]));
+	    } else {
+		c = new String[] { c[0], c[1] + c[2] };
+		if (getByKeys(u, c[1]) != null)
+		    return Command.lookAt(u, getByKeys(u, c[1]));
+	    }
 	}
+	return "There doesn't appear to be any \"" + c[c.length - 1] + "\" here...";
     }
 
     public static String welcome() {
 	String s;
 	try {
-	    BufferedReader in = new BufferedReader(new FileReader(
-		    "./welcome.txt"));
+	    BufferedReader in = new BufferedReader(new FileReader("./welcome.txt"));
 	    CharBuffer target = CharBuffer.allocate(1400);
 	    in.read(target);
 	    target.rewind();
-	    s = target.toString();
+	    s = target.toString().trim();
 	    in.close();
 	} catch (FileNotFoundException e) {
-	    Main.printAlert(id,
-		    "'welcome.txt' not found! Creating default welcome...");
+	    Main.printAlert(id, "'welcome.txt' not found! Creating default welcome...");
 	    writeDefaultWelcome();
 	    s = welcome();
 	} catch (IOException e) {
-	    Main.printAlert(id,
-		    "Error reading 'welcome.txt'! Creating default welcome...");
+	    Main.printAlert(id, "Error reading 'welcome.txt'! Creating default welcome...");
 	    writeDefaultWelcome();
 	    s = welcome();
 	}
@@ -110,8 +114,7 @@ public abstract class Parser {
     }
 
     private static void writeDefaultWelcome() {
-	InputStream in = Main.class
-		.getResourceAsStream("/resource/welcome.txt");
+	InputStream in = Main.class.getResourceAsStream("/resource/defaultwelcome");
 	FileOutputStream out = null;
 	try {
 	    out = new FileOutputStream("./welcome.txt");

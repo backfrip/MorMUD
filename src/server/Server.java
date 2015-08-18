@@ -15,8 +15,7 @@ public class Server extends Thread {
     private int counter;
 
     public Server(int port) {
-	Main.printInfo(id, "Attempting to start a new server on port " + port
-		+ "...");
+	Main.printInfo(id, "Attempting to start a new server on port " + port + "...");
 	try {
 	    listener = new Listener(this, port);
 	} catch (IOException e) {
@@ -29,8 +28,7 @@ public class Server extends Thread {
 	    counter = 0;
 	    start();
 	} else {
-	    Main.printAlert(id,
-		    "Unknown error verifying server startup, shutting down...");
+	    Main.printAlert(id, "Unable to verify server startup, shutting down...");
 	    listener.dispose();
 	    clearConnections();
 	}
@@ -56,8 +54,7 @@ public class Server extends Thread {
     }
 
     public void newConnection(Socket client) {
-	Main.printInfo(id, "New connection from ("
-		+ client.getRemoteSocketAddress().toString().substring(1) + ")");
+	Main.printInfo(id, "New connection from (" + client.getInetAddress().getHostAddress().trim() + ")");
 	Connection con = new Connection(client, counter);
 	connections.add(con);
 	counter++;

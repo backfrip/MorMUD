@@ -1,7 +1,6 @@
 package language;
 
 import object.GameObject;
-import object.Room;
 import server.User;
 
 public abstract class Command {
@@ -14,8 +13,10 @@ public abstract class Command {
     }
 
     public static String lookIn(User u, GameObject o) {
-	if (o.isContainer())
-	    return o.lookIn();
-	return o + " is not a container!";
+	return o.lookIn();
+    }
+
+    public static String lookOn(User u, GameObject o) {
+	return o.lookOn();
     }
 }
