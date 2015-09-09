@@ -7,7 +7,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import language.Formatter;
 import language.Parser;
+import main.Data;
 import main.Main;
 
 public class Connection extends Thread {
@@ -26,8 +28,10 @@ public class Connection extends Thread {
 	user = null;
 
 	try {
-	    in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-	    out = new PrintWriter(new BufferedOutputStream(socket.getOutputStream()), true);
+	    in = new BufferedReader(new InputStreamReader(
+		    socket.getInputStream()));
+	    out = new PrintWriter(new BufferedOutputStream(
+		    socket.getOutputStream()), true);
 	} catch (IOException e) {
 	    Main.printAlert(id, "Error getting client input/output streams!");
 	    e.printStackTrace();
@@ -39,31 +43,32 @@ public class Connection extends Thread {
     @Override
     public void run() {
 	send(Parser.welcome());
-	try {
-	    initializeUser();
-	} catch (IOException e1) {
-	    Main.printAlert(id, "Client socket connection error! (This one is definitely not intentional.)");
-	}
-	send(Parser.parse("l", user));
-	for (go = true; go;) {
-	    send("prompt!>");
-	    try {
-		read = in.readLine();
-		if (read != null) {
-		    send(Parser.parse(read, user));
-		} else {
+	initializeUser();
+	if (user != null) {
+	    send(Parser.parse("l", user));
+	    for (go = true; go;) {
+		send("`sprompt!>");
+		try {
+		    read = in.readLine();
+		    if (read != null && !read.equalsIgnoreCase("quit")
+			    && !read.equalsIgnoreCase("exit")) {
+			send(Parser.parse(read, user));
+		    } else {
+			send("`5Logging you out...");
+			go = false;
+		    }
+		} catch (IOException e) {
+		    Main.printAlert(id,
+			    "Client socket connection error. (This may be intentional.)");
 		    go = false;
 		}
-	    } catch (IOException e) {
-		Main.printAlert(id, "Client socket connection error. (This may be intentional.)");
-		go = false;
 	    }
-	}
-	try {
-	    socket.close();
-	} catch (IOException e) {
-	    Main.printAlert(id, "Error closing client socket!");
-	    e.printStackTrace();
+	    try {
+		socket.close();
+	    } catch (IOException e) {
+		Main.printAlert(id, "Error closing client socket!");
+		e.printStackTrace();
+	    }
 	}
 	Main.printInfo(id, "Connection closed successfully.");
     }
@@ -82,7 +87,7 @@ public class Connection extends Thread {
     }
 
     public void send(String s) {
-	out.println("\n" + s);
+	out.println("\n" + Formatter.format(s, user));
 	if (out.checkError())
 	    Main.printAlert(id, "Error sending message to client!");
     }
@@ -91,7 +96,6 @@ public class Connection extends Thread {
 	try {
 	    return socket.getInetAddress().isReachable(0);
 	} catch (IOException e) {
-	    // TODO Auto-generated catch block
 	    e.printStackTrace();
 	}
 	return false;
@@ -113,18 +117,30 @@ public class Connection extends Thread {
 	return user;
     }
 
-    private void initializeUser() throws IOException {
-	while (user == null) {
-	    send("Username:");
-	    String u = in.readLine();
-	    send("Password:");
-	    String p = in.readLine();
-	    if (Main.storage.checkUser(u, p)) {
-		send("Logging you in...");
+    private void initializeUser() {
+	loop: while (user == null) {
+	    send("`sUsername:");
+	    String u;
+	    try {
+		u = in.readLine();
+	    } catch (IOException e) {
+		return;
+	    }
+	    send("`sPassword:");
+	    String p;
+	    try {
+		p = in.readLine();
+	    } catch (IOException e) {
+		return;
+	    }
+	    if (u == null || p == null)
+		break loop;
+	    if (Data.checkUser(u, p)) {
+		send("`5Logging you in...");
 		user = new User(u);
 	    } else {
-		send("Username and password not recognized! Creating new user...");
-		Main.storage.addUser(u, p);
+		send("`5Username and password not recognized! Creating new user...");
+		Data.addUser(u, p);
 	    }
 	}
     }

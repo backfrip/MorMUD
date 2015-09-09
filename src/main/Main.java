@@ -1,122 +1,99 @@
 package main;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Properties;
 
 import language.Parser;
 import server.Server;
 
+/**
+ * The MorMUD Main class.
+ * 
+ * @author E Stringham
+ *
+ */
 public class Main {
+    private static int state;
     private static Server server;
-    private static Properties properties;
-    private static boolean go;
-    public static Storage storage;
+
+
+    //   \  |   \  _ _|  \ |
+    //  |\/ |  _ \   |  .  |
+    // _|  _|_/  _\___|_|\_|
+
 
     /**
-     * Handler method for MorMUD.
+     * Main handler method for MorMUD.
      * 
      * @param args
      *            Arguments given by command line.
      */
     public static void main(String[] args) {
-	go = true;
-	DefaultWriter.check();
-	if (!go)
+	printInfo("MorMUD Version 0.2.2");
+	state = 0;
+	Data.initialize();
+	if (state != 0)
 	    System.exit(1);
-	storage = new Storage();
-	if (!go)
-	    System.exit(1);
-	properties = new Properties();
-	try {
-	    printInfo("Attempting to load properties from 'main.properties'...");
-	    loadProperties();
-	} catch (FileNotFoundException e) {
-	    printAlert("File 'main.properties' not found!");
-	    printInfo("Creating new default properties file...");
-	    try {
-		writeDefaultProperties();
-	    } catch (IOException ioe) {
-		printAlert("Error creating file 'main.properties'!");
-		printAlert("Ending execution...");
-		ioe.printStackTrace();
-		System.exit(1);
-	    }
-	} catch (IOException e) {
-	    printAlert("Error reading file 'main.properties'!");
-	    printAlert("Ending execution...");
-	    e.printStackTrace();
-	    System.exit(1);
-	} // Replacing all of the above later when I get around to coding
-	  // DefaultWriter
-	try {
-	    printInfo("Attempting to start the server...");
-	    server = new Server(Integer.parseInt(properties.getProperty("port")));
-	} catch (Exception e) {
-	    printAlert("Error starting server!");
-	    printAlert("Ending execution...");
-	    e.printStackTrace();
-	    System.exit(1);
-	}
+
+	printInfo("Attempting to start the server...");
+	server = new Server(Integer.parseInt(Data.getProperty("port")));
+
 	BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 	String read;
+
 	printInfo("Now listening for console input...");
-	while (go) {
+	while (state == 0) {
 	    try {
 		read = in.readLine().trim();
+
 		Parser.parseConsole(read);
 	    } catch (IOException e) {
 		printAlert("Error reading System input!");
-		e.printStackTrace();
 	    }
 	}
+
 	printInfo("Shutting down server...");
-	server.dispose();
-	printInfo("Ending execution...");
+	server.shutdown();
+	if (state == -1) {
+	    Data.clean();
+	    printInfo("Restarting execution...");
+	    main(args);
+	} else {
+	    Data.save();
+	    printInfo("Ending execution...");
+	}
     }
 
     /**
-     * Prints an info update to the system output.
+     * Ends MorMUD execution.
+     */
+    public static void shutdown() {
+	state = 1;
+    }
+
+    public static void wipe() {
+	state = -1;
+    }
+
+    public static boolean isActive() {
+	return state == 0;
+    }
+
+
+    //  |     _ \   __|  __|_ _|  \ |  __|
+    //  |    (   | (_ | (_ |  |  .  | (_ |
+    // ____|\___/ \___|\___|___|_|\_|\___|
+
+
+    /**
+     * Prints an information update to the system output.
      * 
      * @param s
      *            The String to be printed.
      */
     private static void printInfo(String s) {
 	System.out.println("[INFO] " + s);
-    }
-
-    /**
-     * Prints an alert update to the system output.
-     * 
-     * @param s
-     *            The String to be printed.
-     */
-    private static void printAlert(String s) {
-	System.out.println("[ALERT] " + s);
-    }
-
-    /**
-     * Attempts to load application properties from the file 'main.properties'.
-     */
-    private static void loadProperties() throws IOException {
-	FileInputStream file = new FileInputStream("./main.properties");
-	properties.load(file);
-	file.close();
-    }
-
-    /**
-     * Writes a new default 'main.properties' file.
-     */
-    private static void writeDefaultProperties() throws IOException {
-	properties.setProperty("port", "5000");
-	FileOutputStream file = new FileOutputStream("./main.properties");
-	properties.store(file, null);
-	file.close();
-	printInfo("Default properties file created successfully!");
     }
 
     /**
@@ -132,6 +109,16 @@ public class Main {
     }
 
     /**
+     * Prints an alert update to the system output.
+     * 
+     * @param s
+     *            The String to be printed.
+     */
+    private static void printAlert(String s) {
+	System.out.println("[ALERT] " + s);
+    }
+
+    /**
      * Allows other objects to print alert updates to the system output.
      * 
      * @param id
@@ -143,7 +130,12 @@ public class Main {
 	printAlert("<" + id + "> " + s);
     }
 
-    public static void shutdown() {
-	go = false;
+    private static void printFatalAlert(String s) {
+	System.err.println("[ALERT] " + s);
     }
+
+    public static void printFatalAlert(String id, String s) {
+	printFatalAlert("<" + id + "> " + s);
+    }
+
 }

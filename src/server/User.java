@@ -1,6 +1,6 @@
 package server;
 
-import main.Main;
+import main.Data;
 import object.GameObject;
 
 public class User {
@@ -9,7 +9,7 @@ public class User {
 
     public User(String u) {
 	username = u;
-	room = Main.storage.getObject(0);
+	room = Data.getObject(0);
 	character = null;
     }
 

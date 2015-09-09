@@ -34,7 +34,7 @@ public class Listener extends Thread {
 	}
     }
 
-    public boolean dispose() {
+    public boolean shutdown() {
 	go = false;
 	interrupt();
 	try {
